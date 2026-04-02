@@ -398,11 +398,19 @@ Ejemplos de métricas:
 
 ## 🗑️ Desinstalación
 
-### Opción 1: Desinstalación Remota (Rápida)
+### Opción 1: Desinstalación Remota (Rápida y Completa)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/execute-remote.sh | bash -s -- --uninstall
 ```
+
+**Este método removerá:**
+- ✓ Comando `mac-cleanup` (symlink)
+- ✓ LaunchAgent (ejecución automática)
+- ✓ Logs y configuración (si confirmas)
+- ✓ **Código fuente descargado** (`~/.mac-cleanup`) (si confirmas)
+
+Desinstalación completa - perfecto para remover todo rastro del sistema.
 
 ### Opción 2: Desinstalación Local
 
@@ -421,9 +429,10 @@ El desinstalador interactivo:
 - ✓ Symlink `/usr/local/bin/mac-cleanup`
 - ✓ LaunchAgent `~/Library/LaunchAgents/com.user.macmaintenance.plist`
 
-**Se preserva** (por seguridad):
+**Se preserva** (por defecto):
 - Logs (`logs/`)
 - Configuración (`config/`)
+- Código fuente (el directorio del repositorio)
 
 El desinstalador te da la opción de eliminar también los datos si lo deseas.
 

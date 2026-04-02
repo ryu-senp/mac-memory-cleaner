@@ -122,12 +122,45 @@ if [ "$MODE" = "uninstall" ]; then
     echo -e "${BLUE}🗑️  Ejecutando desinstalador...${NC}"
     echo ""
     ./uninstall.sh "$@"
+
+    # Preguntar si desea eliminar el código fuente descargado
+    echo ""
+    echo "╔═══════════════════════════════════════════════════════════════╗"
+    echo "║           ELIMINAR CÓDIGO FUENTE DESCARGADO                  ║"
+    echo "╚═══════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo -e "${YELLOW}⚠️  El directorio con el código fuente aún existe:${NC}"
+    echo "   $INSTALL_DIR"
+    echo ""
+    echo "¿Deseas eliminarlo también? (yes/no): "
+    read -r delete_source
+
+    case "$delete_source" in
+        [Yy]|[Yy][Ee][Ss])
+            echo ""
+            echo -e "${BLUE}🗑️  Eliminando directorio $INSTALL_DIR...${NC}"
+            cd "$HOME"  # Salir del directorio antes de eliminarlo
+            if rm -rf "$INSTALL_DIR"; then
+                echo -e "${GREEN}✓ Código fuente eliminado completamente${NC}"
+                SOURCE_DELETED=true
+            else
+                echo -e "${RED}✗ Error al eliminar el directorio${NC}"
+                SOURCE_DELETED=false
+            fi
+            ;;
+        *)
+            echo ""
+            echo -e "${BLUE}ℹ️  Código fuente preservado en: $INSTALL_DIR${NC}"
+            SOURCE_DELETED=false
+            ;;
+    esac
 else
     # Modo instalación
     chmod +x install.sh
     echo -e "${BLUE}🔧 Ejecutando instalador...${NC}"
     echo ""
     ./install.sh "$@"
+    SOURCE_DELETED=false
 fi
 
 # 6. Mensaje final
@@ -135,12 +168,17 @@ echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 if [ "$MODE" = "uninstall" ]; then
     echo -e "${GREEN}✓ Desinstalación remota completada${NC}"
+    if [ "$SOURCE_DELETED" = true ]; then
+        echo -e "${GREEN}✓ Código fuente eliminado${NC}"
+    else
+        echo ""
+        echo "El código fuente está en: ${BLUE}$INSTALL_DIR${NC}"
+        echo "Puedes eliminarlo manualmente con: rm -rf $INSTALL_DIR"
+    fi
 else
     echo -e "${GREEN}✓ Instalación remota completada${NC}"
-fi
-echo ""
-echo "El código fuente está en: ${BLUE}$INSTALL_DIR${NC}"
-if [ "$MODE" = "install" ]; then
+    echo ""
+    echo "El código fuente está en: ${BLUE}$INSTALL_DIR${NC}"
     echo "Puedes mantenerlo para futuras actualizaciones o eliminarlo si deseas."
     echo ""
     echo "Para actualizar en el futuro:"
