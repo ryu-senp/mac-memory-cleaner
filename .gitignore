@@ -1,0 +1,62 @@
+# Logs y métricas
+logs/
+*.log
+
+# Archivos de respaldo
+*.bak
+*.swp
+*.swo
+*~
+
+# Archivos de macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Editor directories and files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.tmproj
+*.vim
+
+# Archivos temporales
+tmp/
+temp/
+*.tmp
+
+# Archivos de configuración local personalizados (opcional)
+# Descomenta si quieres ignorar configuraciones locales:
+# config/maintenance.conf.local
+# config/process-blacklist.conf.local
+
+# Reportes (si no quieres versionarlos)
+reports/
+
+# Cache de symlinks resueltos
+.symlink_cache
