@@ -103,15 +103,20 @@ REPO_URL="https://github.com/ryu-senp/mac-memory-cleaner.git"
 
 # Solo preguntar ruta si es instalación (no desinstalación)
 if [ "$MODE" = "install" ]; then
-    # Detect if stdin available (interactive vs curl | bash)
+    # Preguntar ruta de instalación
+    echo "📁 Ruta de instalación:"
+
+    # Usar /dev/tty para leer desde el terminal incluso con curl | bash
     if [ -t 0 ]; then
-        echo "📁 Ruta de instalación:"
+        # Modo interactivo normal
         read -p "   [default: $DEFAULT_INSTALL_DIR]: " CUSTOM_INSTALL_DIR
-        INSTALL_DIR="${CUSTOM_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
     else
-        # Non-interactive mode: use default or existing env var
-        INSTALL_DIR="${MAC_CLEANUP_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
+        # Ejecutado con curl | bash - usar /dev/tty
+        echo -n "   [default: $DEFAULT_INSTALL_DIR]: "
+        read -r CUSTOM_INSTALL_DIR </dev/tty
     fi
+
+    INSTALL_DIR="${CUSTOM_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
 
     # Expand ~ to full path if needed
     INSTALL_DIR="${INSTALL_DIR/#\~/$HOME}"
