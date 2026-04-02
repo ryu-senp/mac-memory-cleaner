@@ -131,6 +131,8 @@ save_to_shell_config() {
 # 3. Guardar variable de entorno si se eligió ruta personalizada
 if [ "$MODE" = "install" ] && [ "$INSTALL_DIR" != "$DEFAULT_INSTALL_DIR" ]; then
     save_to_shell_config "export MAC_CLEANUP_INSTALL_DIR=\"$INSTALL_DIR\""
+    # También exportar en la sesión actual para uso inmediato
+    export MAC_CLEANUP_INSTALL_DIR="$INSTALL_DIR"
 fi
 
 # 4. Clonar o actualizar repositorio
