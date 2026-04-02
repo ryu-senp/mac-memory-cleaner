@@ -15,6 +15,40 @@ PLIST_DEST="$HOME/Library/LaunchAgents/com.user.macmaintenance.plist"
 INTERVAL_HOURS=6
 
 # ============================================================================
+# Verificar si mac-cleanup ya está instalado
+# ============================================================================
+check_existing_installation() {
+    if command -v mac-cleanup &> /dev/null; then
+        echo ""
+        echo "╔═══════════════════════════════════════════════════════════════╗"
+        echo "║             ⚠️  Mac Cleanup Ya Está Instalado                ║"
+        echo "╚═══════════════════════════════════════════════════════════════╝"
+        echo ""
+        echo "El comando 'mac-cleanup' ya está disponible en tu sistema."
+        echo ""
+
+        # Mostrar ubicación actual
+        local current_location=$(which mac-cleanup)
+        echo "Ubicación actual: $current_location"
+
+        # Verificar si es symlink y mostrar destino
+        if [ -L "$current_location" ]; then
+            local target=$(readlink "$current_location")
+            echo "Apunta a:        $target"
+        fi
+
+        echo ""
+        echo "Opciones:"
+        echo "  1. Usa 'mac-cleanup --help' para ver comandos disponibles"
+        echo "  2. Para reinstalar, primero ejecuta: ./uninstall.sh"
+        echo "  3. Para actualizar, ejecuta: git pull (si instalaste con git)"
+        echo ""
+
+        exit 0
+    fi
+}
+
+# ============================================================================
 # Mostrar banner
 # ============================================================================
 show_banner() {
@@ -122,55 +156,67 @@ setup_launchagent() {
     echo "para mantener tu sistema optimizado."
     echo ""
 
-    # Preguntar si quiere ejecución automática
-    while true; do
-        read -p "¿Configurar ejecución automática periódica? (yes/no): " setup_auto
-        setup_auto=$(echo "$setup_auto" | tr '[:upper:]' '[:lower:]')
+    # Detectar si stdin está disponible (modo interactivo vs pipe)
+    if [ ! -t 0 ]; then
+        # Modo no-interactivo (ejecutado con curl | bash)
+        echo "ℹ️  Modo no-interactivo detectado"
+        echo "  Configurando con valores por defecto:"
+        echo "  - Ejecución automática: SÍ"
+        echo "  - Intervalo: Cada 6 horas"
+        echo ""
+        INTERVAL_HOURS=6
+    else
+        # Modo interactivo - preguntar al usuario
+        # Preguntar si quiere ejecución automática
+        while true; do
+            read -p "¿Configurar ejecución automática periódica? (yes/no): " setup_auto
+            setup_auto=$(echo "$setup_auto" | tr '[:upper:]' '[:lower:]')
 
-        case "$setup_auto" in
-            yes|y|si|s)
-                # Usuario dijo SÍ - continuar con configuración
-                break
-                ;;
-            no|n)
-                echo ""
-                echo "⊘ Ejecución automática NO configurada"
-                echo "  Podrás ejecutar manualmente cuando lo necesites: mac-cleanup"
-                echo ""
-                return 0
-                ;;
-            *)
-                echo "❌ Por favor responde 'yes' o 'no'"
-                ;;
-        esac
-    done
+            case "$setup_auto" in
+                yes|y|si|s)
+                    # Usuario dijo SÍ - continuar con configuración
+                    break
+                    ;;
+                no|n)
+                    echo ""
+                    echo "⊘ Ejecución automática NO configurada"
+                    echo "  Podrás ejecutar manualmente cuando lo necesites: mac-cleanup"
+                    echo ""
+                    return 0
+                    ;;
+                *)
+                    echo "❌ Por favor responde 'yes' o 'no'"
+                    ;;
+            esac
+        done
 
-    # Preguntar intervalo (opciones simplificadas)
-    echo ""
-    echo "⏰ ¿Cada cuántas horas debe ejecutarse?"
-    echo ""
-    echo "  1) Cada 1 hora"
-    echo "  2) Cada 3 horas"
-    echo "  3) Cada 6 horas (recomendado)"
-    echo "  4) Cada 12 horas"
-    echo "  5) Cada 24 horas (una vez al día)"
-    echo ""
+        # Preguntar intervalo (opciones simplificadas) - solo en modo interactivo
+        echo ""
+        echo "⏰ ¿Cada cuántas horas debe ejecutarse?"
+        echo ""
+        echo "  1) Cada 1 hora"
+        echo "  2) Cada 3 horas"
+        echo "  3) Cada 6 horas (recomendado)"
+        echo "  4) Cada 12 horas"
+        echo "  5) Cada 24 horas (una vez al día)"
+        echo ""
 
-    while true; do
-        read -p "Selecciona una opción (1-5) [default: 3]: " interval_option
-        interval_option=${interval_option:-3}
+        while true; do
+            read -p "Selecciona una opción (1-5) [default: 3]: " interval_option
+            interval_option=${interval_option:-3}
 
-        case $interval_option in
-            1) INTERVAL_HOURS=1; break ;;
-            2) INTERVAL_HOURS=3; break ;;
-            3) INTERVAL_HOURS=6; break ;;
-            4) INTERVAL_HOURS=12; break ;;
-            5) INTERVAL_HOURS=24; break ;;
-            *)
-                echo "❌ Opción inválida. Por favor selecciona 1-5"
-                ;;
-        esac
-    done
+            case $interval_option in
+                1) INTERVAL_HOURS=1; break ;;
+                2) INTERVAL_HOURS=3; break ;;
+                3) INTERVAL_HOURS=6; break ;;
+                4) INTERVAL_HOURS=12; break ;;
+                5) INTERVAL_HOURS=24; break ;;
+                *)
+                    echo "❌ Opción inválida. Por favor selecciona 1-5"
+                    ;;
+            esac
+        done
+    fi
 
     # Convertir horas a segundos
     local interval_seconds=$((INTERVAL_HOURS * 3600))
@@ -285,6 +331,9 @@ show_summary() {
 # MAIN
 # ============================================================================
 main() {
+    # Verificar si ya está instalado (abortar si existe)
+    check_existing_installation
+
     show_banner
     setup_directories
     make_executable

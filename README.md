@@ -35,20 +35,56 @@ Puede ejecutarse **manualmente** cuando lo desees, o **automáticamente** cada X
 - **Procesos Protegidos**: Blacklist de procesos críticos del sistema
 - **Solo Administradores**: Verifica permisos de admin antes de ejecutar
 
-## 📦 Instalación Rápida
+## 📦 Instalación
+
+### Opción 1: Instalación Rápida (Recomendado)
+
+Un solo comando instala todo el sistema:
 
 ```bash
-# 1. Navegar al directorio del proyecto
-cd mac-cleanup
-
-# 2. Ejecutar instalador maestro
-./install.sh
-
-# El instalador SIEMPRE preguntará:
-# - ¿Configurar ejecución automática periódica? (yes/no)
-# - Si yes: ¿Cada cuántas horas? 
-#   Opciones: 1h, 3h, 6h (recomendado), 12h, 24h
+curl -fsSL https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/remote-install.sh | bash
 ```
+
+**¿Qué hace este comando?**
+- Descarga y ejecuta el instalador remoto
+- Verifica Git y permisos de administrador
+- Clona el repositorio en `~/.mac-cleanup`
+- Ejecuta el instalador interactivo
+
+**Seguridad**: Si prefieres revisar el script antes de ejecutarlo:
+
+```bash
+# Descarga primero
+curl -fsSL https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/remote-install.sh > install-mac-cleanup.sh
+
+# Revisa el contenido
+cat install-mac-cleanup.sh
+
+# Ejecuta si estás conforme
+bash install-mac-cleanup.sh
+```
+
+### Opción 2: Instalación Manual (Para Desarrolladores)
+
+Si prefieres tener control total y ver el código:
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/ryu-senp/mac-memory-cleaner.git
+
+# 2. Navegar al directorio
+cd mac-memory-cleaner
+
+# 3. Ejecutar instalador
+./install.sh
+```
+
+### Durante la Instalación
+
+El instalador SIEMPRE preguntará:
+- ¿Configurar ejecución automática periódica? (yes/no)
+- Si yes: ¿Cada cuántas horas? 
+  - Opciones: 1h, 3h, 6h (recomendado), 12h, 24h
 
 ## ⚠️ Requisitos
 
@@ -207,12 +243,37 @@ Antes de ejecutar, verifica:
 - ✓ Time Machine no ejecutando backup
 - ✓ Quiet hours (solo para modo automático)
 
+### Seguridad del Remote Installer
+
+**¿Es seguro ejecutar `curl ... | bash`?**
+
+El script `remote-install.sh`:
+- Es de código abierto y auditable en GitHub
+- Solo descarga código del repositorio oficial
+- Requiere permisos de admin (validación explícita)
+- No ejecuta comandos destructivos
+- Solo clona el repo y ejecuta el instalador interactivo
+
+**Recomendaciones de seguridad**:
+1. Revisa el código en GitHub antes de ejecutar
+2. Usa la opción de descarga + revisión + ejecución manual
+3. Solo ejecuta desde la URL oficial: `raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/remote-install.sh`
+
+**¿Qué NO hace el instalador remoto?**
+- ✗ No modifica archivos del sistema sin tu permiso
+- ✗ No ejecuta limpieza automáticamente (solo instala)
+- ✗ No requiere sudo hasta que lo uses (purge)
+- ✗ No envía datos a servidores externos
+
 ## 📂 Estructura de Archivos
 
 ```
 mac-cleanup/
+├── .gitignore                      # Archivos ignorados por Git
+├── README.md                       # Esta documentación
 ├── install.sh                      # Instalador maestro
 ├── uninstall.sh                    # Desinstalador interactivo
+├── remote-install.sh               # Instalador remoto (curl | bash)
 ├── mac-maintenance.sh              # Script principal
 ├── lib/                            # Bibliotecas modulares
 │   ├── logger.sh                  # Sistema de logging
@@ -279,6 +340,31 @@ nano ~/Library/LaunchAgents/com.user.macmaintenance.plist
 # Luego recargar:
 launchctl unload ~/Library/LaunchAgents/com.user.macmaintenance.plist
 launchctl load ~/Library/LaunchAgents/com.user.macmaintenance.plist
+```
+
+## 🔄 Actualización
+
+Si instalaste desde GitHub, puedes actualizar a la última versión:
+
+### Si instalaste con remote install:
+
+```bash
+cd ~/.mac-cleanup
+git pull origin main
+
+# No necesitas reinstalar, los cambios se aplicarán automáticamente
+# Si hubo cambios en el LaunchAgent, recárgalo:
+launchctl unload ~/Library/LaunchAgents/com.user.macmaintenance.plist
+launchctl load ~/Library/LaunchAgents/com.user.macmaintenance.plist
+```
+
+### Si instalaste con git clone manual:
+
+```bash
+cd <tu-directorio-de-clonacion>
+git pull origin main
+
+# No necesitas reinstalar, los cambios se aplicarán automáticamente
 ```
 
 ## 📊 Logs y Métricas
@@ -382,9 +468,42 @@ cat /tmp/mac-cleanup.error.log
 
 ### "No memory freed" después de ejecutar
 
-**Problema**: Puede que no sea necesario limpiar.
+**Problema**: Puede que no ser necesario limpiar.
 
 **Explicación**: Si tienes suficiente memoria libre (>2GB por defecto), el sistema está funcionando bien. El purge solo reorganiza memoria inactiva.
+
+### Error al clonar el repositorio
+
+**Problema**: `git clone` falla o no tienes git instalado.
+
+**Solución**:
+```bash
+# Verificar si git está instalado
+git --version
+
+# Si no está instalado, instalar con Homebrew:
+brew install git
+
+# O descargar manualmente desde GitHub:
+# https://github.com/ryu-senp/mac-memory-cleaner/archive/refs/heads/main.zip
+# Descomprimir y ejecutar ./install.sh
+```
+
+### "Mac Cleanup Ya Está Instalado"
+
+**Problema**: Al ejecutar `./install.sh` aparece mensaje de que ya está instalado.
+
+**Solución**:
+```bash
+# Si quieres reinstalar, primero desinstala:
+./uninstall.sh
+
+# Luego instala de nuevo:
+./install.sh
+
+# Si solo quieres actualizar:
+git pull origin main
+```
 
 ## 📝 FAQ
 
