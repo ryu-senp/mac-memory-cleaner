@@ -121,7 +121,8 @@ if [ "$MODE" = "uninstall" ]; then
     chmod +x uninstall.sh
     echo -e "${BLUE}🗑️  Ejecutando desinstalador...${NC}"
     echo ""
-    ./uninstall.sh "$@"
+    # Ejecutar en modo force para evitar problemas de stdin con curl | bash
+    ./uninstall.sh --force
 
     # Preguntar si desea eliminar el código fuente descargado
     echo ""
@@ -132,8 +133,16 @@ if [ "$MODE" = "uninstall" ]; then
     echo -e "${YELLOW}⚠️  El directorio con el código fuente aún existe:${NC}"
     echo "   $INSTALL_DIR"
     echo ""
-    echo "¿Deseas eliminarlo también? (yes/no): "
-    read -r delete_source
+
+    # Usar /dev/tty para leer desde el terminal incluso con curl | bash
+    if [ -t 0 ]; then
+        # Modo interactivo normal
+        read -p "¿Deseas eliminarlo también? (yes/no): " delete_source
+    else
+        # Ejecutado con curl | bash - usar /dev/tty
+        echo -n "¿Deseas eliminarlo también? (yes/no): "
+        read -r delete_source </dev/tty
+    fi
 
     case "$delete_source" in
         [Yy]|[Yy][Ee][Ss])

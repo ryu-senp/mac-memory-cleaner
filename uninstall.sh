@@ -8,6 +8,20 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SYMLINK_PATH="/usr/local/bin/mac-cleanup"
 PLIST_DEST="$HOME/Library/LaunchAgents/com.user.macmaintenance.plist"
 
+# Detectar modo force
+FORCE_MODE=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --force|-f)
+            FORCE_MODE=true
+            shift
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
 # ============================================================================
 # Mostrar banner
 # ============================================================================
@@ -82,6 +96,13 @@ ask_confirmation() {
     echo "  • Logs ($SCRIPT_DIR/logs/)"
     echo "  • Configuración ($SCRIPT_DIR/config/)"
     echo ""
+
+    # Si está en modo force, no pedir confirmación
+    if [ "$FORCE_MODE" = true ]; then
+        echo "ℹ️  Modo force: Procediendo automáticamente..."
+        echo ""
+        return 0
+    fi
 
     read -p "¿Continuar con la desinstalación? (yes/no): " response
 
@@ -249,7 +270,14 @@ clean_all_data() {
     echo "  • Todos los reportes ($SCRIPT_DIR/reports/)"
     echo ""
 
-    read -p "¿Estás seguro? Esta acción NO se puede deshacer (yes/no): " confirm
+    # Si está en modo force, proceder sin confirmación
+    if [ "$FORCE_MODE" = true ]; then
+        confirm="yes"
+        echo "ℹ️  Modo force: Eliminando datos automáticamente..."
+        echo ""
+    else
+        read -p "¿Estás seguro? Esta acción NO se puede deshacer (yes/no): " confirm
+    fi
 
     case "$confirm" in
         [Yy]|[Yy][Ee][Ss])
@@ -321,17 +349,22 @@ main() {
 
         # Preguntar si desea limpieza completa
         echo ""
-        read -p "¿Deseas también eliminar logs y configuración? (yes/no): " clean_data
+        if [ "$FORCE_MODE" = true ]; then
+            # En modo force, eliminar automáticamente
+            clean_all_data
+        else
+            read -p "¿Deseas también eliminar logs y configuración? (yes/no): " clean_data
 
-        case "$clean_data" in
-            [Yy]|[Yy][Ee][Ss])
-                clean_all_data
-                ;;
-            *)
-                echo ""
-                echo "Datos preservados"
-                ;;
-        esac
+            case "$clean_data" in
+                [Yy]|[Yy][Ee][Ss])
+                    clean_all_data
+                    ;;
+                *)
+                    echo ""
+                    echo "Datos preservados"
+                    ;;
+            esac
+        fi
     else
         show_summary 1
     fi
