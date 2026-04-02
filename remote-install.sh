@@ -49,10 +49,27 @@ REPO_URL="https://github.com/ryu-senp/mac-memory-cleaner.git"
 
 # 4. Clonar o actualizar repositorio
 if [ -d "$INSTALL_DIR" ]; then
-    echo -e "${YELLOW}📁 Directorio ya existe, actualizando...${NC}"
-    cd "$INSTALL_DIR"
-    git pull origin main
-    echo -e "${GREEN}✓ Repositorio actualizado${NC}"
+    # Verificar si es un repositorio git válido
+    if [ -d "$INSTALL_DIR/.git" ]; then
+        echo -e "${YELLOW}📁 Directorio ya existe, actualizando...${NC}"
+        cd "$INSTALL_DIR"
+
+        # Fetch cambios remotos
+        git fetch origin main 2>/dev/null
+
+        # Forzar reset a la versión remota (descarta cambios locales)
+        # Esto es seguro porque es un directorio de instalación, no de desarrollo
+        git reset --hard origin/main
+
+        echo -e "${GREEN}✓ Repositorio actualizado a la última versión${NC}"
+    else
+        # Existe pero no es un repo git - eliminar y clonar de nuevo
+        echo -e "${YELLOW}⚠️  Directorio existe pero no es un repositorio git${NC}"
+        echo -e "${YELLOW}   Eliminando y clonando de nuevo...${NC}"
+        rm -rf "$INSTALL_DIR"
+        git clone "$REPO_URL" "$INSTALL_DIR"
+        echo -e "${GREEN}✓ Descarga completa${NC}"
+    fi
 else
     echo -e "${BLUE}📥 Descargando Mac Cleanup desde GitHub...${NC}"
     git clone "$REPO_URL" "$INSTALL_DIR"
