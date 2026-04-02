@@ -47,6 +47,37 @@ else
 fi
 echo ""
 
+# 0. Determinar directorio de instalación PRIMERO (antes de verificar nada)
+DEFAULT_INSTALL_DIR="$HOME/.mac-cleanup"
+REPO_URL="https://github.com/ryu-senp/mac-memory-cleaner.git"
+
+if [ "$MODE" = "install" ]; then
+    # Preguntar ruta de instalación ANTES de clonar
+    echo "📁 Ruta de instalación:"
+
+    # Usar /dev/tty para leer desde el terminal incluso con curl | bash
+    if [ -t 0 ]; then
+        # Modo interactivo normal
+        read -p "   [default: $DEFAULT_INSTALL_DIR]: " CUSTOM_INSTALL_DIR
+    else
+        # Ejecutado con curl | bash - usar /dev/tty
+        echo -n "   [default: $DEFAULT_INSTALL_DIR]: "
+        read -r CUSTOM_INSTALL_DIR </dev/tty
+    fi
+
+    INSTALL_DIR="${CUSTOM_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
+
+    # Expand ~ to full path if needed
+    INSTALL_DIR="${INSTALL_DIR/#\~/$HOME}"
+
+    echo ""
+    echo -e "${BLUE}📂 Se instalará en: ${INSTALL_DIR}${NC}"
+    echo ""
+else
+    # Uninstall mode: use existing env var or default
+    INSTALL_DIR="${MAC_CLEANUP_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
+fi
+
 # 1. Verificar Git
 echo -e "${BLUE}🔍 Verificando requisitos...${NC}"
 if ! command -v git &> /dev/null; then
@@ -97,37 +128,9 @@ save_to_shell_config() {
     fi
 }
 
-# 3. Determinar directorio de instalación
-DEFAULT_INSTALL_DIR="$HOME/.mac-cleanup"
-REPO_URL="https://github.com/ryu-senp/mac-memory-cleaner.git"
-
-# Solo preguntar ruta si es instalación (no desinstalación)
-if [ "$MODE" = "install" ]; then
-    # Preguntar ruta de instalación
-    echo "📁 Ruta de instalación:"
-
-    # Usar /dev/tty para leer desde el terminal incluso con curl | bash
-    if [ -t 0 ]; then
-        # Modo interactivo normal
-        read -p "   [default: $DEFAULT_INSTALL_DIR]: " CUSTOM_INSTALL_DIR
-    else
-        # Ejecutado con curl | bash - usar /dev/tty
-        echo -n "   [default: $DEFAULT_INSTALL_DIR]: "
-        read -r CUSTOM_INSTALL_DIR </dev/tty
-    fi
-
-    INSTALL_DIR="${CUSTOM_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
-
-    # Expand ~ to full path if needed
-    INSTALL_DIR="${INSTALL_DIR/#\~/$HOME}"
-
-    # If custom path chosen and different from default, save to env
-    if [ "$INSTALL_DIR" != "$DEFAULT_INSTALL_DIR" ]; then
-        save_to_shell_config "export MAC_CLEANUP_INSTALL_DIR=\"$INSTALL_DIR\""
-    fi
-else
-    # Uninstall mode: use existing env var or default
-    INSTALL_DIR="${MAC_CLEANUP_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
+# 3. Guardar variable de entorno si se eligió ruta personalizada
+if [ "$MODE" = "install" ] && [ "$INSTALL_DIR" != "$DEFAULT_INSTALL_DIR" ]; then
+    save_to_shell_config "export MAC_CLEANUP_INSTALL_DIR=\"$INSTALL_DIR\""
 fi
 
 # 4. Clonar o actualizar repositorio
