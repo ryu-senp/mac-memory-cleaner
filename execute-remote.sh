@@ -93,9 +93,94 @@ if [ "$MODE" = "install" ]; then
         exit 1
     fi
 else
-    # Uninstall mode: use existing env var or default
+    # ========================================================================
+    # MODO DESINSTALACIÓN - Flujo completamente diferente
+    # ========================================================================
+
+    # Buscar instalación existente
     INSTALL_DIR="${MAC_CLEANUP_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
+
+    echo -e "${BLUE}🔍 Buscando instalación de Mac Cleanup...${NC}"
+    echo "   Buscando en: $INSTALL_DIR"
+    echo ""
+
+    # Verificar si existe la instalación
+    if [ ! -d "$INSTALL_DIR" ]; then
+        echo -e "${YELLOW}⚠️  No se encontró instalación en $INSTALL_DIR${NC}"
+        echo ""
+        echo "Nada que desinstalar."
+        echo ""
+        exit 0
+    fi
+
+    # Verificar que existe uninstall.sh
+    if [ ! -f "$INSTALL_DIR/uninstall.sh" ]; then
+        echo -e "${RED}✗ Error: Directorio existe pero no contiene uninstall.sh${NC}"
+        echo ""
+        echo "El directorio parece estar corrupto. Puedes eliminarlo manualmente:"
+        echo "  rm -rf $INSTALL_DIR"
+        echo ""
+        exit 1
+    fi
+
+    echo -e "${GREEN}✓ Instalación encontrada${NC}"
+    echo ""
+
+    # Ejecutar desinstalación directamente (sin clonar nada)
+    cd "$INSTALL_DIR"
+    chmod +x uninstall.sh
+    echo -e "${BLUE}🗑️  Ejecutando desinstalador...${NC}"
+    echo ""
+    ./uninstall.sh --force
+
+    # Preguntar si desea eliminar el código fuente
+    echo ""
+    echo "╔═══════════════════════════════════════════════════════════════╗"
+    echo "║           ELIMINAR CÓDIGO FUENTE DESCARGADO                  ║"
+    echo "╚═══════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo -e "${YELLOW}⚠️  El directorio con el código fuente aún existe:${NC}"
+    echo "   $INSTALL_DIR"
+    echo ""
+
+    # Usar /dev/tty para leer desde el terminal incluso con curl | bash
+    if [ -t 0 ]; then
+        read -p "¿Deseas eliminarlo también? (yes/no): " delete_source
+    else
+        echo -n "¿Deseas eliminarlo también? (yes/no): "
+        read -r delete_source </dev/tty
+    fi
+
+    case "$delete_source" in
+        [Yy]|[Yy][Ee][Ss])
+            echo ""
+            echo -e "${BLUE}🗑️  Eliminando directorio $INSTALL_DIR...${NC}"
+            cd "$HOME"  # Salir del directorio antes de eliminarlo
+            if rm -rf "$INSTALL_DIR"; then
+                echo -e "${GREEN}✓ Código fuente eliminado completamente${NC}"
+            else
+                echo -e "${RED}✗ Error al eliminar el directorio${NC}"
+                echo "Puedes eliminarlo manualmente con: rm -rf $INSTALL_DIR"
+            fi
+            ;;
+        *)
+            echo ""
+            echo -e "${BLUE}ℹ️  Código fuente preservado en: $INSTALL_DIR${NC}"
+            ;;
+    esac
+
+    echo ""
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}✓ Desinstalación remota completada${NC}"
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+
+    exit 0
 fi
+
+# ============================================================================
+# MODO INSTALACIÓN - Continúa el flujo normal
+# ============================================================================
 
 # 1. Verificar Git
 echo -e "${BLUE}🔍 Verificando requisitos...${NC}"
@@ -111,17 +196,15 @@ if ! command -v git &> /dev/null; then
 fi
 echo -e "${GREEN}✓ Git encontrado${NC}"
 
-# 2. Verificar permisos de admin (solo para instalación)
-if [ "$MODE" = "install" ]; then
-    if ! groups | grep -q '\badmin\b'; then
-        echo -e "${RED}✗ Tu usuario no tiene permisos de administrador${NC}"
-        echo ""
-        echo "Este script requiere que estés en el grupo 'admin'."
-        echo "Contacta al administrador del sistema."
-        exit 1
-    fi
-    echo -e "${GREEN}✓ Permisos de administrador verificados${NC}"
+# 2. Verificar permisos de admin
+if ! groups | grep -q '\badmin\b'; then
+    echo -e "${RED}✗ Tu usuario no tiene permisos de administrador${NC}"
+    echo ""
+    echo "Este script requiere que estés en el grupo 'admin'."
+    echo "Contacta al administrador del sistema."
+    exit 1
 fi
+echo -e "${GREEN}✓ Permisos de administrador verificados${NC}"
 echo ""
 
 # ============================================================================
@@ -190,85 +273,22 @@ fi
 
 echo ""
 
-# 5. Ejecutar installer o uninstaller según el modo
+# 5. Ejecutar instalador
 cd "$INSTALL_DIR"
+chmod +x install.sh
+echo -e "${BLUE}🔧 Ejecutando instalador...${NC}"
+echo ""
+./install.sh "$@"
 
-if [ "$MODE" = "uninstall" ]; then
-    # Modo desinstalación
-    chmod +x uninstall.sh
-    echo -e "${BLUE}🗑️  Ejecutando desinstalador...${NC}"
-    echo ""
-    # Ejecutar en modo force para evitar problemas de stdin con curl | bash
-    ./uninstall.sh --force
-
-    # Preguntar si desea eliminar el código fuente descargado
-    echo ""
-    echo "╔═══════════════════════════════════════════════════════════════╗"
-    echo "║           ELIMINAR CÓDIGO FUENTE DESCARGADO                  ║"
-    echo "╚═══════════════════════════════════════════════════════════════╝"
-    echo ""
-    echo -e "${YELLOW}⚠️  El directorio con el código fuente aún existe:${NC}"
-    echo "   $INSTALL_DIR"
-    echo ""
-
-    # Usar /dev/tty para leer desde el terminal incluso con curl | bash
-    if [ -t 0 ]; then
-        # Modo interactivo normal
-        read -p "¿Deseas eliminarlo también? (yes/no): " delete_source
-    else
-        # Ejecutado con curl | bash - usar /dev/tty
-        echo -n "¿Deseas eliminarlo también? (yes/no): "
-        read -r delete_source </dev/tty
-    fi
-
-    case "$delete_source" in
-        [Yy]|[Yy][Ee][Ss])
-            echo ""
-            echo -e "${BLUE}🗑️  Eliminando directorio $INSTALL_DIR...${NC}"
-            cd "$HOME"  # Salir del directorio antes de eliminarlo
-            if rm -rf "$INSTALL_DIR"; then
-                echo -e "${GREEN}✓ Código fuente eliminado completamente${NC}"
-                SOURCE_DELETED=true
-            else
-                echo -e "${RED}✗ Error al eliminar el directorio${NC}"
-                SOURCE_DELETED=false
-            fi
-            ;;
-        *)
-            echo ""
-            echo -e "${BLUE}ℹ️  Código fuente preservado en: $INSTALL_DIR${NC}"
-            SOURCE_DELETED=false
-            ;;
-    esac
-else
-    # Modo instalación
-    chmod +x install.sh
-    echo -e "${BLUE}🔧 Ejecutando instalador...${NC}"
-    echo ""
-    ./install.sh "$@"
-    SOURCE_DELETED=false
-fi
-
-# 6. Mensaje final
+# 6. Mensaje final (solo para instalación)
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-if [ "$MODE" = "uninstall" ]; then
-    echo -e "${GREEN}✓ Desinstalación remota completada${NC}"
-    if [ "$SOURCE_DELETED" = true ]; then
-        echo -e "${GREEN}✓ Código fuente eliminado${NC}"
-    else
-        echo ""
-        echo "El código fuente está en: ${BLUE}$INSTALL_DIR${NC}"
-        echo "Puedes eliminarlo manualmente con: rm -rf $INSTALL_DIR"
-    fi
-else
-    echo -e "${GREEN}✓ Instalación remota completada${NC}"
-    echo ""
-    echo "El código fuente está en: ${BLUE}$INSTALL_DIR${NC}"
-    echo "Puedes mantenerlo para futuras actualizaciones o eliminarlo si deseas."
-    echo ""
-    echo "Para actualizar en el futuro:"
-    echo "  cd $INSTALL_DIR && git pull"
-fi
+echo -e "${GREEN}✓ Instalación remota completada${NC}"
+echo ""
+echo "El código fuente está en: ${BLUE}$INSTALL_DIR${NC}"
+echo "Puedes mantenerlo para futuras actualizaciones o eliminarlo si deseas."
+echo ""
+echo "Para actualizar en el futuro:"
+echo "  cd $INSTALL_DIR && git pull"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
