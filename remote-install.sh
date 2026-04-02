@@ -55,11 +55,15 @@ if [ -d "$INSTALL_DIR" ]; then
         cd "$INSTALL_DIR"
 
         # Fetch cambios remotos
-        git fetch origin main 2>/dev/null
+        echo -e "${YELLOW}   Obteniendo última versión...${NC}"
+        git fetch origin main 2>&1
+
+        # Asegurar que estamos en la rama main
+        git checkout main 2>/dev/null || git checkout -b main
 
         # Forzar reset a la versión remota (descarta cambios locales)
         # Esto es seguro porque es un directorio de instalación, no de desarrollo
-        git reset --hard origin/main
+        git reset --hard origin/main 2>&1
 
         echo -e "${GREEN}✓ Repositorio actualizado a la última versión${NC}"
     else
