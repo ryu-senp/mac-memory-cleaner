@@ -97,31 +97,45 @@ El instalador SIEMPRE preguntará:
 
 Por defecto, se instala en `~/.mac-cleanup`. Si prefieres otra ubicación:
 
-**Modo interactivo (instalación local):**
+**Durante la instalación remota:**
 ```bash
-git clone https://github.com/ryu-senp/mac-memory-cleaner.git
-cd mac-memory-cleaner
-./install.sh
-# Te preguntará: 📁 Ruta de instalación: [default: ~/.mac-cleanup]
-# Escribe tu ruta preferida o presiona Enter para el default
+curl -fsSL https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/execute-remote.sh | bash
 ```
 
-**Modo remoto con curl | bash:**
-```bash
-# El instalador remoto usa ~/.mac-cleanup por defecto (no hay prompt con curl | bash)
-# Para usar ruta personalizada, clona el repo y usa ./install.sh
+Te preguntará:
 ```
+📁 Directorio base de instalación:
+   (El repositorio .mac-cleanup se creará dentro)
+   [default: /Users/tu-usuario]:
+```
+
+**Ejemplos:**
+
+1. **Default** (presionar Enter):
+   - Directorio base: `$HOME`
+   - Se instala en: `~/.mac-cleanup`
+   - Variable de entorno: **NO** se crea
+
+2. **Ruta personalizada** (ejemplo: `/opt/otros`):
+   - Directorio base: `/opt/otros`
+   - Se instala en: `/opt/otros/.mac-cleanup`
+   - Variable de entorno: **SÍ** se crea
 
 **Variable de entorno:**
 
-Si instalas en una ruta personalizada, se creará automáticamente:
+Si eliges un directorio base diferente a `$HOME`, se creará automáticamente:
 ```bash
-export MAC_CLEANUP_INSTALL_DIR="/tu/ruta/personalizada"
+export MAC_CLEANUP_INSTALL_DIR="/opt/otros/.mac-cleanup"
 ```
 
-Esta variable se agrega a tu `.zshrc` o `.bashrc` y se elimina automáticamente al desinstalar.
+Esta variable:
+- Se agrega a tu `.zshrc` o `.bashrc`
+- Se exporta en la sesión actual (disponible inmediatamente)
+- Se elimina automáticamente al desinstalar
 
 **¿Por qué?** Permite que el sistema encuentre tu instalación sin importar desde dónde ejecutes `mac-cleanup`.
+
+**Nota importante:** Si el directorio `.mac-cleanup` ya existe en la ruta elegida, la instalación se detendrá y te pedirá desinstalar primero.
 
 ## ⚠️ Requisitos
 
