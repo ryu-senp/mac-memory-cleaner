@@ -277,6 +277,100 @@ send_notification() {
 }
 
 # ============================================================================
+# Verificar actualizaciones
+# ============================================================================
+check_for_updates() {
+    # Solo verificar en modo interactivo
+    if [ "$FORCE_MODE" = "true" ]; then
+        return 0
+    fi
+
+    local version_file="$SCRIPT_DIR/VERSION"
+    local github_version_url="https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/VERSION"
+
+    # Leer versión local
+    if [ ! -f "$version_file" ]; then
+        return 0  # Si no existe el archivo, no verificar
+    fi
+
+    local local_version=$(cat "$version_file" 2>/dev/null | tr -d '[:space:]')
+
+    # Intentar obtener versión remota (timeout 3 segundos)
+    local remote_version=$(curl -fsSL --max-time 3 "$github_version_url" 2>/dev/null | tr -d '[:space:]')
+
+    # Si no se pudo obtener la versión remota, salir silenciosamente
+    if [ -z "$remote_version" ]; then
+        return 0
+    fi
+
+    # Comparar versiones
+    if [ "$local_version" != "$remote_version" ]; then
+        echo ""
+        echo "╔═══════════════════════════════════════════════════════════════════════╗"
+        echo "║                    📦 NUEVA VERSIÓN DISPONIBLE                        ║"
+        echo "╠═══════════════════════════════════════════════════════════════════════╣"
+        echo "║  Versión actual:     $local_version"
+        echo "║  Versión disponible: $remote_version"
+        echo "╚═══════════════════════════════════════════════════════════════════════╝"
+        echo ""
+
+        # Preguntar si desea actualizar
+        read -p "¿Deseas actualizar ahora? (yes/no): " update_response
+
+        case "$update_response" in
+            [Yy]|[Yy][Ee][Ss])
+                echo ""
+                echo "🔄 Actualizando Mac Cleanup..."
+
+                # Verificar si estamos en un repositorio git
+                if [ -d "$SCRIPT_DIR/.git" ]; then
+                    cd "$SCRIPT_DIR"
+
+                    # Guardar cambios locales si existen
+                    if ! git diff --quiet || ! git diff --cached --quiet; then
+                        echo "  ⚠️  Guardando cambios locales..."
+                        git stash save "Auto-stash antes de actualización $(date +%Y%m%d_%H%M%S)"
+                    fi
+
+                    # Hacer pull
+                    echo "  📥 Descargando última versión..."
+                    if git pull origin main; then
+                        echo ""
+                        echo "✅ Actualización completada exitosamente!"
+                        echo "   Nueva versión: $remote_version"
+                        echo ""
+                        echo "🔄 Por favor, ejecuta el comando de nuevo para usar la nueva versión."
+                        exit 0
+                    else
+                        echo ""
+                        echo "❌ Error al actualizar. Intenta manualmente:"
+                        echo "   cd $SCRIPT_DIR"
+                        echo "   git pull origin main"
+                        echo ""
+                        echo "Continuando con la versión actual..."
+                        sleep 2
+                    fi
+                else
+                    echo ""
+                    echo "⚠️  No se detectó repositorio git."
+                    echo "   Para actualizar manualmente:"
+                    echo "   curl -fsSL https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/execute-remote.sh | bash"
+                    echo ""
+                    echo "Continuando con la versión actual..."
+                    sleep 2
+                fi
+                ;;
+            *)
+                echo ""
+                echo "ℹ️  Actualización omitida. Continuando con versión $local_version..."
+                echo ""
+                sleep 1
+                ;;
+        esac
+    fi
+}
+
+# ============================================================================
 # MAIN
 # ============================================================================
 main() {
@@ -304,12 +398,19 @@ main() {
 
     # Mostrar banner (solo en modo interactivo)
     if [ "$FORCE_MODE" != "true" ]; then
+        local version=$(cat "$SCRIPT_DIR/VERSION" 2>/dev/null | tr -d '[:space:]')
+        version=${version:-"unknown"}
+
         echo ""
         echo "╔═══════════════════════════════════════════════════════════════════════╗"
         echo "║                Mac Cleanup - Sistema de Mantenimiento                 ║"
+        echo "║                           Versión: $version                            ║"
         echo "╚═══════════════════════════════════════════════════════════════════════╝"
         echo ""
     fi
+
+    # Verificar actualizaciones disponibles (solo en modo interactivo)
+    check_for_updates
 
     # VERIFICAR PERMISOS DE ADMINISTRADOR (CRÍTICO)
     check_admin_permissions

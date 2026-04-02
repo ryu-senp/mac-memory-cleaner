@@ -278,6 +278,7 @@ El script `execute-remote.sh`:
 mac-cleanup/
 ├── .gitignore                      # Archivos ignorados por Git
 ├── README.md                       # Esta documentación
+├── VERSION                         # Versión actual del sistema
 ├── install.sh                      # Instalador maestro
 ├── uninstall.sh                    # Desinstalador interactivo
 ├── execute-remote.sh               # Instalador/desinstalador remoto (curl | bash)
@@ -351,9 +352,37 @@ launchctl load ~/Library/LaunchAgents/com.user.macmaintenance.plist
 
 ## 🔄 Actualización
 
-Si instalaste desde GitHub, puedes actualizar a la última versión:
+### Sistema Automático de Actualizaciones ✨
 
-### Si instalaste con remote install:
+**Mac Cleanup verifica automáticamente** si hay nuevas versiones disponibles cada vez que lo ejecutas en modo interactivo.
+
+**¿Qué sucede?**
+1. Al ejecutar `mac-cleanup`, el sistema verifica la versión en GitHub
+2. Si hay una nueva versión, muestra una notificación:
+   ```
+   ╔═══════════════════════════════════════════════════════════════════════╗
+   ║                    📦 NUEVA VERSIÓN DISPONIBLE                        ║
+   ╠═══════════════════════════════════════════════════════════════════════╣
+   ║  Versión actual:     0.0.1-BETA
+   ║  Versión disponible: 0.0.2-BETA
+   ╚═══════════════════════════════════════════════════════════════════════╝
+   
+   ¿Deseas actualizar ahora? (yes/no):
+   ```
+3. Si dices `yes`, descarga e instala automáticamente la nueva versión
+4. Si dices `no`, continúa con la versión actual
+
+**Ventajas:**
+- ✅ No se actualiza automáticamente sin tu permiso
+- ✅ Verificación rápida (timeout 3 segundos)
+- ✅ Solo se verifica en modo interactivo (no en modo `--force`)
+- ✅ Instalación automática con un solo `yes`
+
+### Actualización Manual
+
+Si prefieres actualizar manualmente:
+
+**Opción 1: Si instalaste desde `~/.mac-cleanup`:**
 
 ```bash
 cd ~/.mac-cleanup
@@ -365,7 +394,7 @@ launchctl unload ~/Library/LaunchAgents/com.user.macmaintenance.plist
 launchctl load ~/Library/LaunchAgents/com.user.macmaintenance.plist
 ```
 
-### Si instalaste con git clone manual:
+**Opción 2: Si instalaste con git clone manual:
 
 ```bash
 cd <tu-directorio-de-clonacion>
