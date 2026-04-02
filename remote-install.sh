@@ -1,6 +1,7 @@
 #!/bin/bash
-# remote-install.sh - Bootstrap installer para Mac Cleanup
-# Uso: curl -fsSL https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/remote-install.sh | bash
+# remote-install.sh - DEPRECATED - Use execute-remote.sh instead
+# Este script existe solo para compatibilidad hacia atrás
+# Uso RECOMENDADO: curl -fsSL https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/execute-remote.sh | bash
 
 set -e  # Exit on error
 
@@ -11,11 +12,19 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m'  # No Color
 
-# Banner
+# Banner con advertencia de deprecación
 echo ""
 echo "╔═══════════════════════════════════════════════════════════════╗"
 echo "║        Mac Cleanup - Remote Installer                        ║"
+echo "╠═══════════════════════════════════════════════════════════════╣"
+echo "║  ⚠️  DEPRECADO: Este script será removido en el futuro       ║"
+echo "║                                                               ║"
+echo "║  Usa el nuevo script execute-remote.sh que soporta:          ║"
+echo "║  • Instalación: curl ... | bash                              ║"
+echo "║  • Desinstalación: curl ... | bash -s -- --uninstall         ║"
 echo "╚═══════════════════════════════════════════════════════════════╝"
+echo ""
+echo -e "${YELLOW}Continuando con instalación...${NC}"
 echo ""
 
 # 1. Verificar Git

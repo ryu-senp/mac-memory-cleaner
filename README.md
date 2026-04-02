@@ -42,7 +42,7 @@ Puede ejecutarse **manualmente** cuando lo desees, o **automáticamente** cada X
 Un solo comando instala todo el sistema:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/remote-install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/execute-remote.sh | bash
 ```
 
 **¿Qué hace este comando?**
@@ -51,17 +51,24 @@ curl -fsSL https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/re
 - Clona el repositorio en `~/.mac-cleanup`
 - Ejecuta el instalador interactivo
 
+**Desinstalación Remota**: También puedes desinstalar remotamente:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/execute-remote.sh | bash -s -- --uninstall
+```
+
 **Seguridad**: Si prefieres revisar el script antes de ejecutarlo:
 
 ```bash
 # Descarga primero
-curl -fsSL https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/remote-install.sh > install-mac-cleanup.sh
+curl -fsSL https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/execute-remote.sh > mac-cleanup-remote.sh
 
 # Revisa el contenido
-cat install-mac-cleanup.sh
+cat mac-cleanup-remote.sh
 
 # Ejecuta si estás conforme
-bash install-mac-cleanup.sh
+bash mac-cleanup-remote.sh              # Para instalar
+bash mac-cleanup-remote.sh --uninstall  # Para desinstalar
 ```
 
 ### Opción 2: Instalación Manual (Para Desarrolladores)
@@ -247,17 +254,17 @@ Antes de ejecutar, verifica:
 
 **¿Es seguro ejecutar `curl ... | bash`?**
 
-El script `remote-install.sh`:
+El script `execute-remote.sh`:
 - Es de código abierto y auditable en GitHub
 - Solo descarga código del repositorio oficial
-- Requiere permisos de admin (validación explícita)
+- Requiere permisos de admin para instalación (validación explícita)
 - No ejecuta comandos destructivos
-- Solo clona el repo y ejecuta el instalador interactivo
+- Solo clona el repo y ejecuta el instalador/desinstalador interactivo
 
 **Recomendaciones de seguridad**:
 1. Revisa el código en GitHub antes de ejecutar
 2. Usa la opción de descarga + revisión + ejecución manual
-3. Solo ejecuta desde la URL oficial: `raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/remote-install.sh`
+3. Solo ejecuta desde la URL oficial: `raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/execute-remote.sh`
 
 **¿Qué NO hace el instalador remoto?**
 - ✗ No modifica archivos del sistema sin tu permiso
@@ -273,7 +280,7 @@ mac-cleanup/
 ├── README.md                       # Esta documentación
 ├── install.sh                      # Instalador maestro
 ├── uninstall.sh                    # Desinstalador interactivo
-├── remote-install.sh               # Instalador remoto (curl | bash)
+├── execute-remote.sh               # Instalador/desinstalador remoto (curl | bash)
 ├── mac-maintenance.sh              # Script principal
 ├── lib/                            # Bibliotecas modulares
 │   ├── logger.sh                  # Sistema de logging
@@ -390,6 +397,14 @@ Ejemplos de métricas:
 - `cache_freed_mb,500`
 
 ## 🗑️ Desinstalación
+
+### Opción 1: Desinstalación Remota (Rápida)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ryu-senp/mac-memory-cleaner/main/execute-remote.sh | bash -s -- --uninstall
+```
+
+### Opción 2: Desinstalación Local
 
 ```bash
 ./uninstall.sh
