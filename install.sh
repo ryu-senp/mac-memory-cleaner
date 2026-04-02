@@ -313,6 +313,9 @@ show_summary() {
     echo "║ Archivos:                                                     ║"
     echo "║   Logs:                 $SCRIPT_DIR/logs/"
     echo "║   Config:               $SCRIPT_DIR/config/maintenance.conf"
+    if [ -n "$MAC_CLEANUP_INSTALL_DIR" ]; then
+        echo "║   Variable de entorno:  MAC_CLEANUP_INSTALL_DIR=${MAC_CLEANUP_INSTALL_DIR}"
+    fi
     echo "║                                                               ║"
     echo "║ Desinstalar:            ./uninstall.sh                        ║"
     echo "╚═══════════════════════════════════════════════════════════════╝"

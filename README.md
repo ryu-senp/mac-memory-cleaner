@@ -93,6 +93,36 @@ El instalador SIEMPRE preguntará:
 - Si yes: ¿Cada cuántas horas? 
   - Opciones: 1h, 3h, 6h (recomendado), 12h, 24h
 
+### Ruta de Instalación Personalizada
+
+Por defecto, se instala en `~/.mac-cleanup`. Si prefieres otra ubicación:
+
+**Modo interactivo (instalación local):**
+```bash
+git clone https://github.com/ryu-senp/mac-memory-cleaner.git
+cd mac-memory-cleaner
+./install.sh
+# Te preguntará: 📁 Ruta de instalación: [default: ~/.mac-cleanup]
+# Escribe tu ruta preferida o presiona Enter para el default
+```
+
+**Modo remoto con curl | bash:**
+```bash
+# El instalador remoto usa ~/.mac-cleanup por defecto (no hay prompt con curl | bash)
+# Para usar ruta personalizada, clona el repo y usa ./install.sh
+```
+
+**Variable de entorno:**
+
+Si instalas en una ruta personalizada, se creará automáticamente:
+```bash
+export MAC_CLEANUP_INSTALL_DIR="/tu/ruta/personalizada"
+```
+
+Esta variable se agrega a tu `.zshrc` o `.bashrc` y se elimina automáticamente al desinstalar.
+
+**¿Por qué?** Permite que el sistema encuentre tu instalación sin importar desde dónde ejecutes `mac-cleanup`.
+
 ## ⚠️ Requisitos
 
 - **Permisos de Administrador**: Tu usuario DEBE estar en el grupo `admin`

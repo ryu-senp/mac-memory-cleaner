@@ -74,9 +74,56 @@ if [ "$MODE" = "install" ]; then
 fi
 echo ""
 
+# ============================================================================
+# Función: Guardar variable de entorno en shell config
+# ============================================================================
+save_to_shell_config() {
+    local export_line="$1"
+
+    # Detect shell
+    if [ -n "$ZSH_VERSION" ] || [ "$SHELL" = "$(which zsh)" 2>/dev/null ]; then
+        SHELL_CONFIG="$HOME/.zshrc"
+    else
+        SHELL_CONFIG="$HOME/.bashrc"
+    fi
+
+    # Check if already exists
+    if ! grep -q "MAC_CLEANUP_INSTALL_DIR" "$SHELL_CONFIG" 2>/dev/null; then
+        echo "" >> "$SHELL_CONFIG"
+        echo "# Mac Cleanup installation directory" >> "$SHELL_CONFIG"
+        echo "$export_line" >> "$SHELL_CONFIG"
+        echo -e "${GREEN}✓ Variable de entorno agregada a $SHELL_CONFIG${NC}"
+        echo "  Ejecuta: source $SHELL_CONFIG (o reinicia la terminal)"
+    fi
+}
+
 # 3. Determinar directorio de instalación
-INSTALL_DIR="$HOME/.mac-cleanup"
+DEFAULT_INSTALL_DIR="$HOME/.mac-cleanup"
 REPO_URL="https://github.com/ryu-senp/mac-memory-cleaner.git"
+
+# Solo preguntar ruta si es instalación (no desinstalación)
+if [ "$MODE" = "install" ]; then
+    # Detect if stdin available (interactive vs curl | bash)
+    if [ -t 0 ]; then
+        echo "📁 Ruta de instalación:"
+        read -p "   [default: $DEFAULT_INSTALL_DIR]: " CUSTOM_INSTALL_DIR
+        INSTALL_DIR="${CUSTOM_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
+    else
+        # Non-interactive mode: use default or existing env var
+        INSTALL_DIR="${MAC_CLEANUP_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
+    fi
+
+    # Expand ~ to full path if needed
+    INSTALL_DIR="${INSTALL_DIR/#\~/$HOME}"
+
+    # If custom path chosen and different from default, save to env
+    if [ "$INSTALL_DIR" != "$DEFAULT_INSTALL_DIR" ]; then
+        save_to_shell_config "export MAC_CLEANUP_INSTALL_DIR=\"$INSTALL_DIR\""
+    fi
+else
+    # Uninstall mode: use existing env var or default
+    INSTALL_DIR="${MAC_CLEANUP_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
+fi
 
 # 4. Clonar o actualizar repositorio
 if [ -d "$INSTALL_DIR" ]; then

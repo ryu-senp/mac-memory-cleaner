@@ -181,6 +181,48 @@ remove_command() {
 }
 
 # ============================================================================
+# Remover variable de entorno
+# ============================================================================
+remove_env_variable() {
+    echo ""
+    echo "🔍 Buscando variable de entorno MAC_CLEANUP_INSTALL_DIR..."
+
+    local removed=false
+
+    # Check .zshrc
+    if [ -f "$HOME/.zshrc" ]; then
+        if grep -q "MAC_CLEANUP_INSTALL_DIR" "$HOME/.zshrc"; then
+            echo "  Removiendo de ~/.zshrc..."
+            # Create temp file without the lines
+            grep -v "MAC_CLEANUP_INSTALL_DIR" "$HOME/.zshrc" > "$HOME/.zshrc.tmp"
+            # Also remove the comment line before it if exists
+            grep -v "# Mac Cleanup installation directory" "$HOME/.zshrc.tmp" > "$HOME/.zshrc.tmp2"
+            mv "$HOME/.zshrc.tmp2" "$HOME/.zshrc"
+            rm -f "$HOME/.zshrc.tmp"
+            echo "  ✓ Variable removida de ~/.zshrc"
+            removed=true
+        fi
+    fi
+
+    # Check .bashrc
+    if [ -f "$HOME/.bashrc" ]; then
+        if grep -q "MAC_CLEANUP_INSTALL_DIR" "$HOME/.bashrc"; then
+            echo "  Removiendo de ~/.bashrc..."
+            grep -v "MAC_CLEANUP_INSTALL_DIR" "$HOME/.bashrc" > "$HOME/.bashrc.tmp"
+            grep -v "# Mac Cleanup installation directory" "$HOME/.bashrc.tmp" > "$HOME/.bashrc.tmp2"
+            mv "$HOME/.bashrc.tmp2" "$HOME/.bashrc"
+            rm -f "$HOME/.bashrc.tmp"
+            echo "  ✓ Variable removida de ~/.bashrc"
+            removed=true
+        fi
+    fi
+
+    if [ "$removed" = false ]; then
+        echo "  • Variable de entorno no encontrada"
+    fi
+}
+
+# ============================================================================
 # Verificar desinstalación
 # ============================================================================
 verify_uninstall() {
@@ -342,6 +384,7 @@ main() {
     # Remover componentes
     remove_launchagent
     remove_command
+    remove_env_variable
 
     # Verificar resultado
     if verify_uninstall; then
